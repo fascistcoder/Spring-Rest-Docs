@@ -20,14 +20,13 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
-//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 /**
  * @author <a href="pulkit.aggarwal@upgrad.com">Pulkit Aggarwal</a>
  * @version 1.0
@@ -49,18 +48,22 @@ class BeerControllerTest {
     BeerRepository beerRepository;
 
     @Test
-    void getBeerById() throws Exception{
+    void getBeerById() throws Exception {
         given(beerRepository.findById(any())).willReturn(Optional.of(Beer.builder().build()));
-        mockMvc.perform(get("/api/v1/beer/{beerId}", UUID.randomUUID().toString()).accept(MediaType.APPLICATION_JSON))
+
+        mockMvc.perform(get("/api/v1/beer/{beerId}", UUID.randomUUID().toString())
+                        .param("isCold", "yes")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(document("v1/beer", pathParameters(
-                        parameterWithName("beerId").description("UUID of desired beer to get")
-                )));
+                        parameterWithName("beerId").description("UUID of desired beer to get")),
+                        requestParameters(parameterWithName("isCold").description("Is beer Cold Param"))
+                ));
     }
 
     @Test
-    void saveNewBeer() throws Exception{
-        BeerDto beerDto =  getValidBeerDto();
+    void saveNewBeer() throws Exception {
+        BeerDto beerDto = getValidBeerDto();
         String beerDtoJson = objectMapper.writeValueAsString(beerDto);
 
         mockMvc.perform(post("/api/v1/beer/")
@@ -71,7 +74,7 @@ class BeerControllerTest {
 
     @Test
     void updateBeerById() throws Exception {
-        BeerDto beerDto =  getValidBeerDto();
+        BeerDto beerDto = getValidBeerDto();
         String beerDtoJson = objectMapper.writeValueAsString(beerDto);
 
         mockMvc.perform(put("/api/v1/beer/" + UUID.randomUUID().toString())
@@ -80,7 +83,7 @@ class BeerControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    BeerDto getValidBeerDto(){
+    BeerDto getValidBeerDto() {
         return BeerDto.builder()
                 .beerName("Nice Ale")
                 .beerStyle(BeerStyleEnum.ALE)
